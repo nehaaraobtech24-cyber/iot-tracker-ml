@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import requests
 import os
@@ -15,27 +15,23 @@ THINGER_TOKEN = os.getenv('THINGER_TOKEN', 'your_token')
 
 @app.route('/')
 def home():
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta http-equiv="refresh" content="0; url=/index.html">
-    </head>
-    <body>
-        <p>Redirecting to dashboard...</p>
-    </body>
-    </html>
-    '''
+    try:
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return jsonify({
+            'status': 'IoT Location Tracker API with ML',
+            'message': 'HTML file not found',
+            'endpoints': {
+                '/api/location': 'Get GPS location',
+                '/api/gps-status': 'Get GPS status and satellites',
+                '/api/led/<state>': 'Control LED (on/off)',
+                '/api/buzzer/<state>': 'Control Buzzer (on/off)',
+                '/api/ml/stats': 'Get ML model statistics',
+                '/api/ml/check': 'Check if location is anomalous'
+            }
+        })
 
-@app.route('/index.html')
-def dashboard():
-    with open('index.html', 'r') as f:
-        return f.read()
-
-@app.route('/api')
-def api_info():
-    return jsonify({
-        'status': 'IoT Location Tracker API with ML',
 @app.route('/api/location')
 def get_location():
     """Get GPS location from Thinger.io"""
