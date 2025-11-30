@@ -83,7 +83,7 @@ class LocationAnomalyDetector:
         if not self.is_trained:
             return {
                 'is_anomaly': False,
-                'confidence': 0,
+                'confidence': 0.0,
                 'reason': 'Model not trained yet (need 20+ data points)',
                 'data_points': len(self.location_history)
             }
@@ -117,19 +117,20 @@ class LocationAnomalyDetector:
                 else:
                     reason = "Location pattern is unusual"
         
+        # Convert numpy types to Python types for JSON serialization
         return {
-            'is_anomaly': prediction == -1,
+            'is_anomaly': bool(prediction == -1),
             'confidence': float(confidence),
             'reason': reason,
-            'data_points': len(self.location_history)
+            'data_points': int(len(self.location_history))
         }
     
     def get_stats(self):
         """Get statistics about the detector"""
         return {
-            'is_trained': self.is_trained,
-            'total_points': len(self.location_history),
-            'points_needed': max(0, 20 - len(self.location_history))
+            'is_trained': bool(self.is_trained),
+            'total_points': int(len(self.location_history)),
+            'points_needed': int(max(0, 20 - len(self.location_history)))
         }
 
 
