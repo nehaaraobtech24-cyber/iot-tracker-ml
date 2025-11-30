@@ -103,6 +103,7 @@
             font-weight: bold;
             margin: 5px;
             transition: transform 0.2s;
+            width: calc(100% - 10px);
         }
 
         .btn:hover {
@@ -375,6 +376,12 @@
                     <span class="info-label">Model Status:</span>
                     <span class="info-value" id="model-status">⏳ Not Trained</span>
                 </div>
+                <button class="btn" onclick="testNormalBehavior()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    ✅ Test Normal Location
+                </button>
+                <button class="btn" onclick="testAnomaly()" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                    ⚠️ Test Anomaly Detection
+                </button>
             </div>
 
             <div class="card map-container">
@@ -519,7 +526,6 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    alert('Failed to control LED');
                     checkbox.checked = !checkbox.checked;
                 }
             } catch (error) {
@@ -535,12 +541,102 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    alert('Failed to control Buzzer');
                     checkbox.checked = !checkbox.checked;
                 }
             } catch (error) {
                 console.error('Error controlling buzzer:', error);
                 checkbox.checked = !checkbox.checked;
+            }
+        }
+
+        // Test normal behavior
+        async function testNormalBehavior() {
+            try {
+                // Send a location close to the trained data (Chennai area)
+                const testLat = 13.0827 + (Math.random() - 0.5) * 0.01;
+                const testLon = 80.2707 + (Math.random() - 0.5) * 0.01;
+                
+                const response = await fetch(`${API_URL}/api/ml/check`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lat: testLat,
+                        lon: testLon
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ml = data.result;
+                    
+                    // Update the map
+                    marker.setLatLng([testLat, testLon]);
+                    map.setView([testLat, testLon], 13);
+                    
+                    // Update display
+                    document.getElementById('latitude').textContent = testLat.toFixed(6);
+                    document.getElementById('longitude').textContent = testLon.toFixed(6);
+                    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+                    
+                    updateMLDisplay(ml);
+                    
+                    const popupContent = `<b style="color: green;">✅ NORMAL BEHAVIOR</b><br>${ml.reason}<br><br><i>This is a simulated test location within your normal movement pattern.</i>`;
+                    marker.bindPopup(popupContent).openPopup();
+                    
+                    alert('✅ Normal Location Tested!\n\nThe AI analyzed this location and determined it matches your normal behavior pattern.');
+                }
+            } catch (error) {
+                console.error('Error testing normal behavior:', error);
+                alert('Error testing normal behavior');
+            }
+        }
+
+        // Test anomaly detection
+        async function testAnomaly() {
+            try {
+                // Send a location far from trained data to trigger anomaly
+                // This simulates being suddenly 100km away (unusual behavior)
+                const testLat = 14.0827; // ~111km north
+                const testLon = 81.2707; // ~100km east
+                
+                const response = await fetch(`${API_URL}/api/ml/check`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lat: testLat,
+                        lon: testLon
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ml = data.result;
+                    
+                    // Update the map
+                    marker.setLatLng([testLat, testLon]);
+                    map.setView([testLat, testLon], 10);
+                    
+                    // Update display
+                    document.getElementById('latitude').textContent = testLat.toFixed(6);
+                    document.getElementById('longitude').textContent = testLon.toFixed(6);
+                    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+                    
+                    updateMLDisplay(ml);
+                    
+                    const popupContent = `<b style="color: red;">⚠️ ANOMALY DETECTED!</b><br>${ml.reason}<br><br><i>This is a simulated test showing how the AI detects unusual locations.</i>`;
+                    marker.bindPopup(popupContent).openPopup();
+                    
+                    alert('⚠️ ANOMALY DETECTED!\n\nThe AI identified this location as suspicious because it\'s far from your normal movement pattern.\n\nReason: ' + ml.reason);
+                }
+            } catch (error) {
+                console.error('Error testing anomaly:', error);
+                alert('Error testing anomaly detection');
             }
         }
 
