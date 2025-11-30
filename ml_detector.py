@@ -1,7 +1,8 @@
 import numpy as np
 from sklearn.ensemble import IsolationForest
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
+import random
 
 class LocationAnomalyDetector:
     def __init__(self):
@@ -133,3 +134,26 @@ class LocationAnomalyDetector:
 
 
 detector = LocationAnomalyDetector()
+
+# Generate synthetic training data
+def generate_synthetic_data():
+    """Generate 25 synthetic location points for training"""
+    base_lat = 13.0827  # Chennai coordinates
+    base_lon = 80.2707
+    base_time = datetime.now()
+    
+    print("Generating synthetic training data...")
+    
+    for i in range(25):
+        # Add small random variations to simulate normal movement
+        lat = base_lat + random.uniform(-0.01, 0.01)
+        lon = base_lon + random.uniform(-0.01, 0.01)
+        timestamp = base_time + timedelta(hours=i)
+        
+        detector.add_location(lat, lon, timestamp)
+    
+    print(f"Added {len(detector.location_history)} synthetic data points")
+    print("ML model is now trained and ready!")
+
+# Automatically generate synthetic data on startup
+generate_synthetic_data()
