@@ -399,6 +399,39 @@
             marker = L.marker([13.0827, 80.2707]).addTo(map);
         }
 
+        // Load ML stats immediately
+        async function loadMLStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/ml/stats`);
+                const data = await response.json();
+                
+                if (data) {
+                    const statusEl = document.getElementById('ml-status');
+                    
+                    if (data.total_points >= 20 && data.is_trained) {
+                        statusEl.className = 'status-badge status-normal';
+                        statusEl.textContent = '✅ Trained & Active';
+                        document.getElementById('model-status').textContent = '✅ Trained & Active';
+                    } else {
+                        statusEl.className = 'status-badge status-training';
+                        statusEl.textContent = '⏳ Training...';
+                        document.getElementById('model-status').textContent = '⏳ Training...';
+                    }
+                    
+                    document.getElementById('data-points').textContent = `${data.total_points} / 20`;
+                    
+                    const progress = Math.min(100, (data.total_points / 20) * 100);
+                    document.getElementById('progress-fill').style.width = progress + '%';
+                    
+                    document.getElementById('ml-reason').textContent = data.is_trained 
+                        ? 'Model is trained and analyzing locations in real-time!' 
+                        : `Need ${data.points_needed} more data points to train`;
+                }
+            } catch (error) {
+                console.error('Error loading ML stats:', error);
+            }
+        }
+
         async function updateLocation() {
             try {
                 const response = await fetch(`${API_URL}/api/location`);
@@ -487,12 +520,11 @@
 
                 if (!data.success) {
                     alert('Failed to control LED');
-                    checkbox.checked = !checkbox.checked; // Revert
+                    checkbox.checked = !checkbox.checked;
                 }
             } catch (error) {
                 console.error('Error controlling LED:', error);
-                alert('Failed to control LED');
-                checkbox.checked = !checkbox.checked; // Revert
+                checkbox.checked = !checkbox.checked;
             }
         }
 
@@ -504,12 +536,11 @@
 
                 if (!data.success) {
                     alert('Failed to control Buzzer');
-                    checkbox.checked = !checkbox.checked; // Revert
+                    checkbox.checked = !checkbox.checked;
                 }
             } catch (error) {
                 console.error('Error controlling buzzer:', error);
-                alert('Failed to control Buzzer');
-                checkbox.checked = !checkbox.checked; // Revert
+                checkbox.checked = !checkbox.checked;
             }
         }
 
@@ -520,6 +551,7 @@
 
         window.onload = () => {
             initMap();
+            loadMLStats(); // Load ML stats first
             updateLocation();
             updateGPSStatus();
         };
