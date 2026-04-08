@@ -1,4 +1,4 @@
-name: Java Assignment Workflow
+name: Python Build Test
 
 on:
   push:
@@ -13,14 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          python-version: '3.11'
 
-      - name: Verify Java files
-        run: dir
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Compile Java files
-        run: javac *.java
+      - name: Syntax check
+        run: python -m py_compile app.py
